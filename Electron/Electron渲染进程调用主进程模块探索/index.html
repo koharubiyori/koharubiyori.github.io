@@ -1,0 +1,79 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><meta name="baidu-site-verification" content="code-huaq5qAbeF"><title>Electron渲染进程调用主进程模块探索 - 小春日和の秘密基地</title><meta name="description" content="小千超级可爱！"><link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@5.8.55/css/materialdesignicons.min.css"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script><link rel="stylesheet" href="/libs/normalize.css?timestamp=1681183437305"><link rel="stylesheet" href="/libs/flex.css?timestamp=1681183437305"><link rel="stylesheet" href="/libs/material-components-web.min.css?timestamp=1681183437305"><link rel="stylesheet" href="/libs/mdc.tooltip.min.css?timestamp=1681183437305"><link rel="stylesheet" href="/libs/prism.css?timestamp=1681183437305"><link rel="stylesheet" href="/libs/viewer.min.css?timestamp=1681183437305"><link rel="stylesheet" href="/styles/commons/index.css?timestamp=1681183437305"><link rel="stylesheet" href="/styles/templates/index.css?timestamp=1681183437305"><link rel="stylesheet" href="/styles/partial/index.css?timestamp=1681183437305"><link rel="stylesheet" href="/styles/layout.css?timestamp=1681183437305"><script src="/libs/jquery.min.js?timestamp=1681183437305"></script><script src="/libs/material-components-web.min.js?timestamp=1681183437305"></script><script src="/libs/mdc.tooltip.min.js?timestamp=1681183437305"></script><script src="/libs/prism.min.js?timestamp=1681183437305"></script><script src="/libs/viewer.min.js?timestamp=1681183437305"></script><script src="/scripts/uiRender.js?timestamp=1681183437305"></script><meta name="generator" content="Hexo 5.0.2"></head><body><img class="page-bgImg" src="/sourceImages/bg.png"><header class="mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z4"><div class="mdc-top-app-bar__row"><section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start"><button id="drawerButton" class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button">menu</button> <a class="mdc-top-app-bar__title" href="/" style="color:#fff">小春日和の秘密基地</a></section><section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end"><button id="searchButton" class="material-icons mdc-top-app-bar__action-item mdc-icon-button">search</button></section></div></header><div class="mainContainer flex-row"><div class="page-drawer"><div class="drawer-placeholder"></div><aside class="mdc-drawer drawer-body mdc-elevation--z4"><div class="drawer-header flex-column flex-evenly"><div class="drawer-header--content flex-column flex-cross-center"><img class="drawer-avatar" src="/sourceImages/avatar.png"><div class="drawer-userName">小春日和</div><div class="drawer-totals flex-row flex-cross-center"><div class="flex flex-column flex-center"><div class="drawer-totals--label">文章</div><div class="drawer-totals--value">共14篇</div></div><div class="flex flex-column flex-center"><div class="drawer-totals--label">标签</div><div class="drawer-totals--value">共12个</div></div><div class="flex flex-column flex-center" id="busuanzi_container_site_pv"><div class="drawer-totals--label" style="text-align:center">总访问</div><div class="drawer-totals--value" style="text-align:center"><span id="busuanzi_value_site_pv"></span><span>次</span></div></div></div></div></div><div class="drawer-content"><div class="drawer-list"><a class="drawer-list-item flex-row flex-cross-center materialRipple materialRipple--dark com-pointer" href="/"><i class="list-item--icon material-icons">home</i><span class="list-item--title">首页</span></a><a class="drawer-list-item flex-row flex-cross-center materialRipple materialRipple--dark com-pointer" href="/2020/08/24/日常/再次启程"><i class="list-item--icon material-icons">info</i><span class="list-item--title">关于博客 </span></a><a class="drawer-list-item flex-row flex-cross-center materialRipple materialRipple--dark com-pointer" target="_blank" rel="noopener" href="https://github.com/koharubiyori"><i class="mdi-set mdi-github" style="font-size:24px;color:var(--mdc-theme-primary);line-height:1.1"></i><span class="list-item--title">Github</span></a><a class="drawer-list-item flex-row flex-cross-center materialRipple materialRipple--dark com-pointer" target="_blank" rel="noopener" href="https://zh.moegirl.org.cn/User:%E6%9D%B1%E6%9D%B1%E5%90%9B"><strong style="font-size:18px;color:var(--mdc-theme-primary);margin-left:3px">萌</strong><span class="list-item--title">萌娘百科</span></a></div></div></aside></div><main class="mainContent flex"><div class="page-post"><link rel="stylesheet" href="/styles/post.css?timestamp=1681183437277"><div class="post-header"><h2 class="post-header--title">Electron渲染进程调用主进程模块探索</h2><div class="post-header--row com-onlyDesktop"><div class="post-header--infoBox" style="background-color:#007fff"><i class="material-icons">watch_later</i><span>2021年10月11日</span></div><div class="post-header--infoBox" style="background-color:#04b431"><i class="material-icons">menu_book</i><span>总字数：1k</span></div><div class="post-header--infoBox" style="background-color:#b40486"><i class="material-icons">access_alarm</i><span>预计阅读时间：13分钟</span></div></div><div class="post-header--row post-header--tags" style="justify-content:flex-start;margin-top:10px"><a class="post-header--tag" href="/tags/Electron/" title="查看“Electron”标签下的文章"><i class="material-icons">local_offer</i><span>Electron</span></a></div></div><div class="post-body mdc-elevation--z2"><img class="post-body--headImg" src="https://snz04pap001files.storage.live.com/y4m0Eqep3xRTPd87LL6ELGFFV0pu2pw8K8aH0i4ISC1Sg072Z8_r3mMoNDZgDva-V5uykoihZCcqM3vuRd_kBd-IBYCTbDaiERkve8obmwtAo_rKm8600Jtu9sj9tSAlMAeW7yWoEco5LaIKsz1pz5I-5GmegPDPQHX9TVptaRlrDKxDk_bHK8O1rwIID4qUgti?width=660&amp;height=371&amp;cropmode=none" style="object-position:undefined;object-fit:contain;background-color:#fffbf5"><div class="post-body--content"><div class="contentContainer"><p>图片来源：<a target="_blank" rel="noopener" href="https://www.pixiv.net/artworks/88043752">pixiv:嵐千砂都ちゃん 作者：ひなた</a></p><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>因为Electron的大部分原生功能都必须主进程调用，渲染进程与主进程之间通信是不可或缺的。在前段时间学习Electron时，探索出了一套个人认为比较好用的暴露主进程接口的模式，在此记录并分享一下。</p><h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><p>一般来说暴露接口主要有两种方式，一是通过预加载脚本向目标window注入函数。由于这种方法不能直接使用ts文件作为预加载脚本，放弃。二就是通过<code>ipcMain</code>与<code>ipcRenderer</code>模块进行通信。但是，这种方式必须在主进程与渲染进程之间两头注册与触发事件，同时维护事件处理与触发的逻辑实在是不够优雅。所以说这里就需要一套既能在主进程，又能在渲染进程运行的代码。</p><h2 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h2><p>为了对暴露的接口进行分类，我这里将<code>ipcMain</code>的每个channel作为一个分类，其下有多个方法。</p><pre class="line-numbers language-none"><code class="language-none">ipcHub
+  &gt; channels     &#x2F;&#x2F; 存放各个channel的方法
+    &gt; dialog.ts
+    &gt; xxx.ts
+    ...
+  &gt; createIpcChannel.ts   &#x2F;&#x2F; 创建channel的函数
+  &gt; index.ts              &#x2F;&#x2F; 汇总所有channel，并导出一个供主进程调用的初始化channel函数</code></pre><h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>假设要创建一个dialog channel，包含一个打开文件夹选择的窗口。单个channel的代码如下：</p><pre class="line-numbers language-ts" data-language="ts"><code class="language-ts">&#x2F;&#x2F; channels&#x2F;dialog.ts
+import &#123; dialog, OpenDialogOptions &#125; from &#39;electron&#39;
+import createIpcChannel from &#39;..&#x2F;createIpcChannel&#39;
+
+&#x2F;&#x2F; 这里暴露了一个显示选择文件夹窗口的接口
+&#x2F;&#x2F; 其中，主进程使用dialogIpc，渲染进程使用dialogIpcClient
+export const dialogIpc &#x3D; createIpcChannel(&#39;dialog&#39;, &#123;
+  &#x2F;&#x2F; 定义channel下的方法，参数从渲染进程传来
+  showDirSelectDialog(options: OpenDialogOptions) &#123;
+    &#x2F;&#x2F; 一些操作，这里的代码会在主线程中执行
+    &#x2F;&#x2F; 将异步的结果返回给渲染进程
+    &#x2F;&#x2F; 这里的this见下面createIpcChannel的说明
+    return dialog.showOpenDialog(this, options)
+  &#125;
+&#125;)
+
+export const dialogIpcClient &#x3D; dialogIpc.getChannelClient()</code></pre><p>接下来是最关键的<code>createIpcChannel</code>函数的实现。</p><pre class="line-numbers language-ts" data-language="ts"><code class="language-ts">&#x2F;&#x2F; createIpcChannel.ts
+import &#123; BrowserWindow, ipcMain, ipcRenderer &#125; from &#39;electron&#39;
+
+&#x2F;&#x2F; 定义泛型，用来在实现暴露的接口的同时定义调用的接口
+type ChannelActions &#x3D; &#123; [actionName: string]: (this: BrowserWindow, ...args: any[]) &#x3D;&gt; any &#125;
+
+&#x2F;&#x2F; 关于上面this的类型定义，由于我自己做的是单页应用，并且没有打开新窗口的操作，
+&#x2F;&#x2F; 也就是说我只维护一个唯一的渲染进程，为了方便所以就在这里将this赋值了window实例，
+&#x2F;&#x2F; 你可以把this当作是一个初始化channel时存放主进程传进来的额外数据的地方，根据自己的需要放其他东西
+
+export default function createIpcChannel&lt;T extends ChannelActions&gt;(channelName: string, actions: T) &#123;
+  &#x2F;&#x2F; 初始化ipc channel，实际上就是绑定对应频道的事件，这个方法要给主进程调用
+  function initIpcChannel(mainWindow: BrowserWindow) &#123;
+    ipcMain.handle(channelName, (e, actionName, ...args) &#x3D;&gt; &#123;
+      &#x2F;&#x2F; 利用传入的actionName区分同一channel下不同方法
+      const targetAction &#x3D; actions[actionName]
+      return targetAction.call(mainWindow, ...args)
+    &#125;)
+  &#125;
+
+  &#x2F;&#x2F; 获取client
+  function getChannelClient() &#123;
+    &#x2F;&#x2F; 根据方法名(actionName)映射对应的方法类型
+    type ChannelClient &#x3D; &#123;
+      [ActionName in keyof T]: (...args: Parameters&lt;T[ActionName]&gt;) &#x3D;&gt; Promise&lt;ReturnType&lt;T[ActionName]&gt;&gt;
+    &#125;
+
+    &#x2F;&#x2F; 用一个proxy将访问转发给对应的方法
+    return new Proxy(&#123;&#125; as ChannelClient, &#123;
+      get(target, getter) &#123;
+        return (...args: any[]) &#x3D;&gt; ipcRenderer.invoke(channelName, getter, ...args)
+      &#125;
+    &#125;)
+  &#125;
+
+  return &#123; initIpcChannel, getChannelClient &#125;
+&#125;</code></pre><p>为了在主线程初始化所有ipc channel，再定义一个方法，供主线程调用。</p><pre class="line-numbers language-ts" data-language="ts"><code class="language-ts">import &#123; BrowserWindow &#125; from &#39;electron&#39;
+import &#123; windowIpc &#125; from &#39;.&#x2F;channels&#x2F;window&#39;
+import &#123; dialogIpc &#125; from &#39;.&#x2F;channels&#x2F;dialog&#39;
+import &#123; appIpc &#125; from &#39;.&#x2F;modules&#x2F;app&#39;
+
+export default function initIpcHub(mainWindow: BrowserWindow) &#123;
+  [
+    windowIpc,
+    dialogIpc,
+    appIpc
+  ].forEach(item &#x3D;&gt; item.initIpcChannel(mainWindow))
+&#125;</code></pre><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><pre class="line-numbers language-ts" data-language="ts"><code class="language-ts">import &#123; dialogIpcClient &#125; from &#39;~&#x2F;ipcHub&#x2F;modules&#x2F;dialog&#39;
+
+async function openDirSelectDialogForSaveFile() &#123;
+  const result &#x3D; await dialogIpcClient.showDirSelectDialog(&#123;
+    title: &#39;选择保存位置&#39;,
+    properties: [&#39;openDirectory&#39;]
+  &#125;)
+
+  if (!result.canceled) console.log(result.filePaths[0])
+&#125;</code></pre></div><div class="articleLicenses"><p>版权声明：本文为原创文章，版权归 小春日和 所有</p><p style="word-break:break-all"><span>文章链接：</span><a id="articleLink" href="javascript:void()" aria-describedby="tooltip-copyArticleLink">https://koharubiyori.github.io/Electron/Electron渲染进程调用主进程模块探索/</a></p><p><span>所有原创文章采用&nbsp;</span><a target="_blank" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh">署名-非商业性使用 4.0 国际 (CC BY-NC 4.0)</a></p><p>您可以自由转载和修改，但必须保证在显著位置注明文章来源，且不能用于商业目的。</p><div id="tooltip-copyArticleLink" class="mdc-tooltip" role="tooltip" aria-hidden="true"><div class="mdc-tooltip__surface"><lorem>点击复制链接</lorem></div></div></div></div></div><div class="prevNextArticle flex-row flex-between"><a class="nextArticle materialRipple materialRipple--dark mdc-elevation--z2 flex" href="/JavaScript/记一次大量调整组件参数的经历/" title="记一次大量调整组件参数的经历"><div class="label">上一篇</div><div class="title com-textLimit">记一次大量调整组件参数的经历</div></a><a class="prevArticle materialRipple materialRipple--dark mdc-elevation--z2 flex" href="/JavaScript/JavaScript之类的混入/" title="JavaScript之“类的混入”"><div class="label">下一篇</div><div class="title com-textLimit">JavaScript之“类的混入”</div></a></div><div id="post-comments"></div></div></main><div class="page-sidebar"><div class="sidebar-placeholder"></div><div class="sidebar-body mdc-elevation--z4"><div class="articleContents"><div class="articleContents-title">目录</div></div><div class="katakoto"><div class="katakoto-title">只言片语</div><div class="katakoto-items"><div class="katakoto-item"><div class="katakoto-item--content">第三次重建博客，希望这次不会没写多少东西就又关了...</div><div class="katakoto-item--date">—— 2020年11月21日 09:35</div></div><div class="katakoto-item"><div class="katakoto-item--content">其实我写博客是为了发图的...なんちゃって</div><div class="katakoto-item--date">—— 2020年12月05日 23:35</div></div><div class="katakoto-item"><div class="katakoto-item--content">希望以后每天都能开心...</div><div class="katakoto-item--date">—— 2020年12月07日 10:14</div></div><div class="katakoto-item"><div class="katakoto-item--content">少想多做。</div><div class="katakoto-item--date">—— 2022年07月03日 00:14</div></div></div></div><div class="tags"><div class="tags-title">内容标签</div><a class="tags-item" href="/tags/Electron/" title="查看“Electron”标签下的文章"><i class="material-icons">local_offer</i><span>Electron</span></a><a class="tags-item" href="/tags/Flutter/" title="查看“Flutter”标签下的文章"><i class="material-icons">local_offer</i><span>Flutter</span></a><a class="tags-item" href="/tags/JavaScript/" title="查看“JavaScript”标签下的文章"><i class="material-icons">local_offer</i><span>JavaScript</span></a><a class="tags-item" href="/tags/TypeScript/" title="查看“TypeScript”标签下的文章"><i class="material-icons">local_offer</i><span>TypeScript</span></a><a class="tags-item" href="/tags/前端/" title="查看“前端”标签下的文章"><i class="material-icons">local_offer</i><span>前端</span></a><a class="tags-item" href="/tags/React/" title="查看“React”标签下的文章"><i class="material-icons">local_offer</i><span>React</span></a><a class="tags-item" href="/tags/Vue-js/" title="查看“Vue.js”标签下的文章"><i class="material-icons">local_offer</i><span>Vue.js</span></a><a class="tags-item" href="/tags/前端技术/" title="查看“前端技术”标签下的文章"><i class="material-icons">local_offer</i><span>前端技术</span></a><a class="tags-item" href="/tags/Windows/" title="查看“Windows”标签下的文章"><i class="material-icons">local_offer</i><span>Windows</span></a><a class="tags-item" href="/tags/小程序/" title="查看“小程序”标签下的文章"><i class="material-icons">local_offer</i><span>小程序</span></a><a class="tags-item" href="/tags/Taro/" title="查看“Taro”标签下的文章"><i class="material-icons">local_offer</i><span>Taro</span></a><a class="tags-item" href="/tags/日常/" title="查看“日常”标签下的文章"><i class="material-icons">local_offer</i><span>日常</span></a></div></div></div><div class="page-search"><div class="search-body"><div class="search-input-container flex-row flex-cross-center"><i class="material-icons">search</i><input class="search-input flex" placeholder="搜索文章..."></div><div class="search-result" data-dirty="false" data-emptyresult="false"></div></div></div></div><div class="backTopButton mdc-elevation--z4 flex-row flex-center is-hide materialRipple"><i class="material-icons">north</i></div></body></html>
